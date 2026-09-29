@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Food Sales OLAP Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Figtree:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #f2f5f7;
+            --card: #fff;
+            --ink: #16263a;
+            --mute: #5d6b7a;
+            --line: #dbe2e8;
+            --a: #1f7a8c;
+            --b: #e8a317;
+            --c: #c8452d;
+            --d: #5b8c5a;
+            --e: #6a4c93;
+            box-sizing: border-box;
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px)
+        }
+
+        @media(prefers-color-scheme:dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #0f1a26;
+                --card: #172536;
+                --ink: #e6edf3;
+                --mute: #93a3b3;
+                --line: #27384b;
+                --a: #4fb3c7;
+                --b: #f0b93a;
+                --c: #e56a52;
+                --d: #7fb47d;
+                --e: #a184d1
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #0f1a26;
+            --card: #172536;
+            --ink: #e6edf3;
+            --mute: #93a3b3;
+            --line: #27384b;
+            --a: #4fb3c7;
+            --b: #f0b93a;
+            --c: #e56a52;
+            --d: #7fb47d;
+            --e: #a184d1
+        }
+
+        html {
+            scroll-padding-top: 64px
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font: 400 15px/1.5 Figtree, system-ui, sans-serif
+        }
+
+        header {
+            padding: 28px clamp(16px, 4vw, 48px) 8px
+        }
+
+        h1 {
+            font: 700 clamp(26px, 4vw, 40px)/1.1 "Bricolage Grotesque", Figtree, sans-serif;
+            margin: 0 0 6px;
+            letter-spacing: -.02em
+        }
+
+        header p {
+            margin: 0;
+            color: var(--mute);
+            max-width: 62ch
+        }
+
+        nav {
+            position: sticky;
+            top: env(safe-area-inset-top, 0px);
+            z-index: 5;
+            background: var(--bg);
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 10px clamp(16px, 4vw, 48px);
+            border-bottom: 1px solid var(--line)
+        }
+
+        nav a {
+            color: var(--ink);
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 99px;
+            border: 1px solid var(--line);
+            white-space: nowrap;
+            font-weight: 500
+        }
+
+        nav a:hover,
+        nav a:focus-visible {
+            background: var(--ink);
+            color: var(--bg);
+            outline: none
+        }
+
+        main {
+            padding: 20px clamp(16px, 4vw, 48px) 48px;
+            max-width: 1280px;
+            margin: 0 auto
+        }
+
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 8px
+        }
+
+        .kpi {
+            border-left: 4px solid var(--a);
+            padding: 6px 14px
+        }
+
+        .kpi:nth-child(2) {
+            border-color: var(--b)
+        }
+
+        .kpi:nth-child(3) {
+            border-color: var(--c)
+        }
+
+        .kpi:nth-child(4) {
+            border-color: var(--d)
+        }
+
+        .kpi b {
+            display: block;
+            font: 700 30px/1.1 "Bricolage Grotesque", Figtree, sans-serif
+        }
+
+        .kpi span {
+            color: var(--mute);
+            font-size: 13px
+        }
+
+        section {
+            margin-top: 36px
+        }
+
+        h2 {
+            font: 700 24px/1.2 "Bricolage Grotesque", Figtree, sans-serif;
+            margin: 0 0 4px
+        }
+
+        .sub {
+            color: var(--mute);
+            margin: 0 0 14px;
+            max-width: 70ch
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+            gap: 16px
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 16px;
+            min-width: 0
+        }
+
+        .card.wide {
+            grid-column: 1/-1
+        }
+
+        .card h3 {
+            font: 600 15px/1.3 Figtree, sans-serif;
+            margin: 0 0 10px
+        }
+
+        .box {
+            position: relative;
+            height: 300px
+        }
+
+        .box.tall {
+            height: 380px
+        }
+
+        .scroll {
+            overflow-x: auto
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 13px;
+            min-width: 560px
+        }
+
+        th,
+        td {
+            padding: 7px 8px;
+            text-align: right;
+            border-bottom: 1px solid var(--card)
+        }
+
+        th:first-child,
+        td:first-child {
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            left: 0;
+            background: var(--card)
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--mute)
+        }
+
+        footer {
+            color: var(--mute);
+            font-size: 12.5px;
+            margin-top: 32px;
+            max-width: 80ch
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Food sales, sliced five ways</h1>
+        <p>Every chart from the OLAP notebook: roll-up, drill-down, slice, dice and pivot views of the same
+            food-delivery orders.</p>
+    </header>
+    <nav aria-label="OLAP operations">
+        <a href="#rollup">Roll-up</a><a href="#drill">Drill-down</a><a href="#slice">Slice</a><a href="#dice">Dice</a><a
+            href="#pivot">Pivot</a>
+    </nav>
+    <main>
+        <div class="kpis" id="kpis"></div>
+
+        <section id="rollup">
+            <h2>Roll-up</h2>
+            <p class="sub">Sales summed up to a higher level: by state, by food category and by month.</p>
+            <div class="grid">
+                <div class="card">
+                    <h3>Total state sales by state</h3>
+                    <div class="box"><canvas id="stateBar"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3>Total state sales vs. average rating</h3>
+                    <div class="box"><canvas id="stateScatter"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3>Category total sales by food category</h3>
+                    <div class="box"><canvas id="catBar"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3>Share of total sales by food category</h3>
+                    <div class="box"><canvas id="catPie"></canvas></div>
+                </div>
+                <div class="card wide">
+                    <h3>Total revenue trend by month</h3>
+                    <div class="box"><canvas id="revLine"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="drill">
+            <h2>Drill-down</h2>
+            <p class="sub">From year to quarter to month, and from state down to its cities.</p>
+            <div class="grid">
+                <div class="card">
+                    <h3>Total sales trend by month, coloured by quarter</h3>
+                    <div class="box"><canvas id="monthQ"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3>Average monthly sales by quarter</h3>
+                    <div class="box"><canvas id="quarterBar"></canvas></div>
+                </div>
+                <div class="card wide">
+                    <h3>Total sales by state (drill-down data)</h3>
+                    <div class="box"><canvas id="stateBar2"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="slice">
+            <h2>Slice</h2>
+            <p class="sub">One slice of the cube: sales by food category.</p>
+            <div class="grid">
+                <div class="card wide">
+                    <h3>Total sales by food category</h3>
+                    <div class="box"><canvas id="sliceBar"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="dice">
+            <h2>Dice</h2>
+            <p class="sub">A sub-cube: Fast Food and Main Course, split by restaurant type and quarter.</p>
+            <div class="grid">
+                <div class="card">
+                    <h3>Average sales by food category and restaurant type</h3>
+                    <div class="box"><canvas id="diceAll"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3>Quarter 1</h3>
+                    <div class="box"><canvas id="diceQ1"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3>Quarter 2</h3>
+                    <div class="box"><canvas id="diceQ2"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pivot">
+            <h2>Pivot</h2>
+            <p class="sub">Cities down the side, food categories across the top.</p>
+            <div class="grid">
+                <div class="card wide">
+                    <h3>Food category sales by city</h3>
+                    <div class="box tall"><canvas id="pivotBar"></canvas></div>
+                </div>
+                <div class="card wide">
+                    <h3>Sales heatmap by city and food category</h3>
+                    <div class="scroll">
+                        <table id="heat"></table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>Exact values come from the notebook's printed tables and the annotated heatmap. Values for a few bars
+            and points were read off the chart images, so they can be off by a few tens.</footer>
+    </main>
+
+    <script>
+        const css = getComputedStyle(document.documentElement);
+        const v = n => css.getPropertyValue(n).trim();
+        const C = [v('--a'), v('--b'), v('--c'), v('--d'), v('--e'), '#8a94a0', '#d97fa0'];
+        Chart.defaults.font.family = 'Figtree,system-ui,sans-serif';
+        Chart.defaults.color = v('--mute');
+        Chart.defaults.borderColor = v('--line');
+        Chart.defaults.maintainAspectRatio = false;
+        const fmt = n => n.toLocaleString('en-IN');
+
+        const cats = ['Main Course', 'Fast Food', 'Starter', 'Dessert', 'Breakfast', 'Snack', 'Beverage'];
+        const catRoll = [22540, 10420, 6410, 3690, 3570, 3030, 2800];
+        const catSlice = [7430, 4030, 2740, 1480, 1450, 1240, 890];
+        const states = ['Maharashtra', 'Karnataka', 'Gujarat', 'Uttar Pradesh', 'West Bengal', 'Telangana', 'Bihar', 'Madhya Pradesh', 'Haryana', 'Goa', 'Tamil Nadu'];
+        const stSales = [25110, 8390, 3730, 3380, 2840, 2560, 2150, 1750, 1250, 1050, 150];
+        const stRate = [4.40, 4.47, 4.34, 4.39, 4.34, 4.29, 4.44, 4.44, 4.58, 4.48, 4.20];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthly = [5560, 9730, 4980, 6880, 2830, 710, 8500, 4990, 280, 3580, 3320, 1070];
+
+        const bar = (id, labels, data, opt = {}) => new Chart(id, {
+            type: 'bar', data: { labels, datasets: [{ data, backgroundColor: opt.colors || C[0], borderRadius: 4 }] },
+            options: { indexAxis: opt.h ? 'y' : 'x', plugins: { legend: { display: false } }, scales: { x: { grid: { display: !!opt.h } }, y: { grid: { display: !opt.h }, beginAtZero: true } } }
+        });
+
+        // KPIs
+        const total = catRoll.reduce((a, b) => a + b, 0);
+        document.getElementById('kpis').innerHTML = [
+            [fmt(total), 'Total sales'],
+            [Math.round(catRoll[0] / total * 100) + '%', 'Main Course share of sales'],
+            [Math.round(stSales[0] / total * 100) + '%', 'Maharashtra share of sales'],
+            [fmt(Math.max(...monthly)), 'Best month (February)']
+        ].map(k => `<div class="kpi"><b>${k[0]}</b><span>${k[1]}</span></div>`).join('');
+
+        // Roll-up
+        bar(stateBar, states, stSales, { colors: states.map((_, i) => i ? C[0] : C[1]) });
+        new Chart(stateScatter, {
+            type: 'scatter', data: { datasets: [{ data: states.map((s, i) => ({ x: stRate[i], y: stSales[i], s })), backgroundColor: C[0], pointRadius: 7 }] },
+            options: {
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.raw.s}: ${fmt(c.raw.y)} sales, rating ${c.raw.x}` } } },
+                scales: { x: { title: { display: true, text: 'Average rating' }, min: 4.15 }, y: { title: { display: true, text: 'Total state sales' }, beginAtZero: true } }
+            }
+        });
+        bar(catBar, cats, catRoll, { colors: C[0] });
+        new Chart(catPie, {
+            type: 'doughnut', data: { labels: cats, datasets: [{ data: catRoll, backgroundColor: C, borderColor: v('--card'), borderWidth: 2 }] },
+            options: { plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: c => `${c.label}: ${(c.raw / total * 100).toFixed(1)}%` } } } }
+        });
+        new Chart(revLine, {
+            type: 'line', data: { labels: months, datasets: [{ data: monthly, borderColor: C[0], backgroundColor: C[0], tension: .15, pointRadius: 4 }] },
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Total revenue' } } } }
+        });
+
+        // Drill-down
+        const qc = { Q1: C[0], Q2: C[1], Q3: C[3], Q4: C[2] };
+        new Chart(monthQ, {
+            type: 'line', data: {
+                labels: months, datasets: ['Q1', 'Q2', 'Q3', 'Q4'].map((q, k) => ({
+                    label: q, borderColor: qc[q], backgroundColor: qc[q], pointRadius: 4,
+                    data: monthly.map((x, i) => Math.floor(i / 3) === k ? x : null)
+                }))
+            }, options: { scales: { y: { beginAtZero: true, title: { display: true, text: 'Total sales' } } } }
+        });
+        const qAvg = [0, 1, 2, 3].map(k => Math.round(monthly.slice(k * 3, k * 3 + 3).reduce((a, b) => a + b, 0) / 3));
+        bar(quarterBar, ['Q1', 'Q2', 'Q3', 'Q4'], qAvg, { colors: [qc.Q1, qc.Q2, qc.Q3, qc.Q4] });
+        bar(stateBar2, states, stSales, { colors: C[0] });
+
+        // Slice
+        bar(sliceBar, cats, catSlice, { colors: C[1] });
+
+        // Dice
+        const diceOpt = { scales: { y: { beginAtZero: true, max: 4000 } } };
+        const dice = (id, cd, ff) => new Chart(id, {
+            type: 'bar', data: {
+                labels: ['Fast Food', 'Main Course'], datasets: [
+                    { label: 'Casual Dining', data: cd, backgroundColor: C[0], borderRadius: 4 }, { label: 'Fast Food', data: ff, backgroundColor: C[3], borderRadius: 4 }]
+            }, options: diceOpt
+        });
+        dice(diceAll, [480, 3720], [440, 765]);
+        dice(diceQ1, [480, 3720], [440, 1010]);
+        dice(diceQ2, [480, null], [null, 520]);
+
+        // Pivot
+        const cols = ['Breakfast', 'Snack', 'Starter', 'Main course', 'Fast food', 'Dessert', 'Beverage'];
+        const P = {
+            Ahmedabad: [0, 420, 0, 1650, 230, 540, 0], Bengaluru: [740, 470, 1370, 3330, 1380, 410, 0], Chennai: [0, 0, 0, 0, 0, 180, 0], Ghaziabad: [0, 0, 0, 290, 210, 0, 0],
+            Gurugram: [0, 0, 0, 270, 630, 0, 360], Hyderabad: [0, 0, 0, 840, 1390, 0, 330], Indore: [0, 0, 0, 350, 1070, 330, 0], Kalyan: [0, 0, 0, 1010, 0, 0, 0],
+            Kolkata: [0, 140, 0, 1940, 280, 480, 0], Lucknow: [0, 380, 0, 0, 1140, 0, 240], Mumbai: [1140, 300, 1910, 6210, 1580, 0, 610], Mysuru: [0, 0, 0, 0, 0, 690, 0],
+            'Navi Mumbai': [450, 0, 700, 0, 0, 0, 320], Noida: [0, 130, 0, 0, 720, 0, 270], Panaji: [0, 0, 0, 340, 0, 590, 150], Patna: [0, 540, 600, 560, 0, 320, 160],
+            Pune: [880, 0, 1370, 4610, 1430, 0, 0], Thane: [360, 240, 460, 810, 360, 0, 360], Vadodara: [0, 410, 0, 330, 0, 150, 0]
+        };
+        const cities = Object.keys(P);
+        new Chart(pivotBar, {
+            type: 'bar', data: { labels: cities, datasets: cols.map((c, i) => ({ label: c, data: cities.map(k => P[k][i]), backgroundColor: C[i], borderRadius: 2 })) },
+            options: { scales: { x: { ticks: { maxRotation: 60, minRotation: 45 } }, y: { beginAtZero: true, title: { display: true, text: 'Sales' } } } }
+        });
+        const max = 6210;
+        document.getElementById('heat').innerHTML = '<tr><th>City</th>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>' +
+            cities.map(k => `<tr><td>${k}</td>` + P[k].map(x => `<td style="background:color-mix(in srgb,${v('--a')} ${Math.round(x / max * 100)}%,transparent)">${x}</td>`).join('') + '</tr>').join('');
+    </script>
+</body>
+
+</html>
